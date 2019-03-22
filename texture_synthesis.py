@@ -92,7 +92,7 @@ rand_col = rd.randint(0, sample_image_col - SEED_SIZE)
 
 print("Creating the random seed from the original image")
 seed = sample_image_normalized[rand_row: rand_row + SEED_SIZE, rand_col: rand_col + SEED_SIZE]
-#plt.imshow(seed, cmap = "gray")
+plt.imshow(seed, cmap = "gray")
 #plt.gcf().clear()  
 
 print("Pasting the 3x3  square seed in center of this almost empty image from the sample image")
@@ -108,7 +108,7 @@ print(filled_pixels)
 
 # filled_list keeps track of the pixels already filled. We use it to extract the neighborhood each time
 filled_list = np.zeros((IMAGE_DIM_HEIGHT, IMAGE_DIM_WIDTH))
-print("Fixing the 3x3  square seed in center of this almost empty image from the sample image")
+print("Fixing the 3x3  square seed in center of this almost empty image")
 filled_list[mt.floor(IMAGE_DIM_HEIGHT/2) - 1: mt.floor(IMAGE_DIM_HEIGHT/2) + 2, \
       mt.floor(IMAGE_DIM_WIDTH/2) - 1: mt.floor(IMAGE_DIM_WIDTH/2) + 2] \
       = np.ones((SEED_SIZE, SEED_SIZE))
@@ -122,16 +122,29 @@ print("potential_pixel_col")
 print(potential_pixel_col)
 
 print("building the actual neighbors by picking a pixel from potential pixels" )
-neighbors = []
+filled_neighbors = []
 
 for i in range(len(potential_pixel_row)):
     pixel_row = potential_pixel_row[i]
     pixel_col = potential_pixel_col[i]
-    
+    print(i)
+    print("the neighborhood consists of window size of pixels with the specific pixel at the center")
     row_min = pixel_row - mt.floor(WINDOW_SIZE/2)
     row_max = pixel_row + mt.floor(WINDOW_SIZE/2) + 1
     col_min = pixel_col - mt.floor(WINDOW_SIZE/2)
     col_max = pixel_col + mt.floor(WINDOW_SIZE/2) + 1
     
-    print("the neighborhood consists of window size of pixels with the specific pixel at the center")
-    neighbors.append(np.sum(filled_list[row_min:row_max, col_min:col_max]))
+    print("For each potential pixel we check how many pixels are already filled in its window")
+    #print("this is done by counting the number of 1s in its window")
+    filled_neighbors.append(np.sum(filled_list[row_min:row_max, col_min:col_max]))
+    
+    # sorting this filled_neighbors in descending order i.e. the first argument gives the pixel
+    # for which number of filled neighbors in the windows i maximum
+    # this pixel is picked up to be grown because we want to minimize the loss in guessing neighborhood
+    
+    descending_filled_num = (-1) * np.array(filled_neighbors, dtype = "int")
+    #print(filled_neighbors)
+    print(descending_filled_num)
+    descending_filled_num_indices = np.argsort(descending_filled_num)
+    print(descending_filled_num_indices)
+#print(filled_neighbors)
