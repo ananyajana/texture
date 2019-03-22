@@ -45,7 +45,7 @@ end
 """
 
 import numpy as np
-from skimage import io
+from skimage import io, morphology
 import random as rd
 import math as mt
 from matplotlib.image import imread
@@ -56,6 +56,7 @@ IMAGE_DIM_HEIGHT = 200
 IMAGE_DIM_WIDTH = 200
 MAX_PIXEL_VALUE = 255
 SEED_SIZE = 3
+WINDOW_SIZE = 5
 
 
 print("reading image")
@@ -91,15 +92,15 @@ rand_col = rd.randint(0, sample_image_col - SEED_SIZE)
 
 print("Creating the random seed from the original image")
 seed = sample_image_normalized[rand_row: rand_row + SEED_SIZE, rand_col: rand_col + SEED_SIZE]
-plt.imshow(seed, cmap = "gray")
+#plt.imshow(seed, cmap = "gray")
 #plt.gcf().clear()  
 
-print("Fixing the 3x3  square seed in center of this almost empty image from the sample image")
+print("Pasting the 3x3  square seed in center of this almost empty image from the sample image")
 image[mt.floor(IMAGE_DIM_HEIGHT/2) - 1: mt.floor(IMAGE_DIM_HEIGHT/2) + 2, \
       mt.floor(IMAGE_DIM_WIDTH/2) - 1: mt.floor(IMAGE_DIM_WIDTH/2) + 2] \
-      = seednp.ones((SEED_SIZE, SEED_SIZE))
+      = seed
 
-print("pasting the actual seed in the )
+print("pasting a 3x3 square patch of 1s in the filled_list" )
 filled_pixels = SEED_SIZE*SEED_SIZE
 print("filled pixels")
 print(filled_pixels)
@@ -111,3 +112,29 @@ print("Fixing the 3x3  square seed in center of this almost empty image from the
 filled_list[mt.floor(IMAGE_DIM_HEIGHT/2) - 1: mt.floor(IMAGE_DIM_HEIGHT/2) + 2, \
       mt.floor(IMAGE_DIM_WIDTH/2) - 1: mt.floor(IMAGE_DIM_WIDTH/2) + 2] \
       = np.ones((SEED_SIZE, SEED_SIZE))
+
+filled_list_neighbors =  morphology.binary_dilation(filled_list)     
+potential_pixel_row, potential_pixel_col = np.nonzero(filled_list_neighbors - filled_list)
+
+print("potential_pixel_row")
+print(potential_pixel_row)
+print("potential_pixel_col")
+print(potential_pixel_col)
+
+print("building the actual neighbors by picking a pixel from potential pixels" )
+neighbors = []
+
+for i in range(len(potential_pixel_row)):
+    pixel_row = potential_pixel_row[i]
+    pixel_col = potential_pixel_col[i]
+    
+    row_min = pixel_row - mt.floor(WINDOW_SIZE/2)
+    row_max = pixel_row + mt.floor(WINDOW_SIZE/2) + 1
+    col_min = pixel_col - mt.floor(WINDOW_SIZE/2)
+    col_max = pixel_col + mt.floor(WINDOW_SIZE/2) + 1
+    
+    print("the neighborhood consists of window size of pixels with the specific pixel at the center")
+    neighbors.append(np.sum(filled_list[: \
+                                        pixel_row + mt.floor(WINDOW_SIZE/ + 1), \
+                                        : \
+                                        pixel_col - mt.floor(WINDOW_SIZE/2) + 1]))
