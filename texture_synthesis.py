@@ -75,6 +75,9 @@ print(sample_image_normalized.shape)
 plt.imshow(sample_image_normalized, cmap = "gray")
 plt.gcf().clear()
 #print(img1.format)
+total_pixels = IMAGE_DIM_HEIGHT*IMAGE_DIM_WIDTH
+print("total pixels to be filled")
+print(total_pixels)
 
 print("Initializing the empty image consisting of all 0s")
 image = np.zeros((IMAGE_DIM_HEIGHT, IMAGE_DIM_WIDTH))
@@ -84,12 +87,27 @@ print("Picking up a random 3x3 square patch from sample image")
 rand_row = rd.randint(0, sample_image_row - SEED_SIZE)
 rand_col = rd.randint(0, sample_image_col - SEED_SIZE)
 
-print("Fixing a 3x3  square patch in center of this almost empty image from the sample image")
-image[mt.floor(IMAGE_DIM_HEIGHT/2) - 1: mt.floor(IMAGE_DIM_HEIGHT/2) + 2, \
-      mt.floor(IMAGE_DIM_WIDTH/2) - 1: mt.floor(IMAGE_DIM_WIDTH/2) + 2] \
-      = np.ones((SEED_SIZE, SEED_SIZE))
 
-print("Creating the seed from the original image")
-seed = sample_image[rand_row: rand_row + SEED_SIZE, rand_col: rand_col + SEED_SIZE]
+
+print("Creating the random seed from the original image")
+seed = sample_image_normalized[rand_row: rand_row + SEED_SIZE, rand_col: rand_col + SEED_SIZE]
 plt.imshow(seed, cmap = "gray")
 #plt.gcf().clear()  
+
+print("Fixing the 3x3  square seed in center of this almost empty image from the sample image")
+image[mt.floor(IMAGE_DIM_HEIGHT/2) - 1: mt.floor(IMAGE_DIM_HEIGHT/2) + 2, \
+      mt.floor(IMAGE_DIM_WIDTH/2) - 1: mt.floor(IMAGE_DIM_WIDTH/2) + 2] \
+      = seednp.ones((SEED_SIZE, SEED_SIZE))
+
+print("pasting the actual seed in the )
+filled_pixels = SEED_SIZE*SEED_SIZE
+print("filled pixels")
+print(filled_pixels)
+
+
+# filled_list keeps track of the pixels already filled. We use it to extract the neighborhood each time
+filled_list = np.zeros((IMAGE_DIM_HEIGHT, IMAGE_DIM_WIDTH))
+print("Fixing the 3x3  square seed in center of this almost empty image from the sample image")
+filled_list[mt.floor(IMAGE_DIM_HEIGHT/2) - 1: mt.floor(IMAGE_DIM_HEIGHT/2) + 2, \
+      mt.floor(IMAGE_DIM_WIDTH/2) - 1: mt.floor(IMAGE_DIM_WIDTH/2) + 2] \
+      = np.ones((SEED_SIZE, SEED_SIZE))
