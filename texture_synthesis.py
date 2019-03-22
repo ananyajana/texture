@@ -61,6 +61,7 @@ SEED_SIZE = 3
 print("reading image")
 sample_image = imread("T1.gif")
 plt.imshow(sample_image, cmap = "gray")
+plt.gcf().clear()
 print("printing image dimension")
 sample_image_row, sample_image_col = sample_image.shape
 
@@ -71,19 +72,24 @@ print(sample_image_normalized)
 print("printing modified image dimension")
 print(sample_image_normalized.shape)
 #img1 = io.imread("T2.gif")
-#plt.imshow(img1, cmap = "gray")
+plt.imshow(sample_image_normalized, cmap = "gray")
+plt.gcf().clear()
 #print(img1.format)
 
 print("Initializing the empty image consisting of all 0s")
-image = np.zeros(IMAGE_DIM_HEIGHT, IMAGE_DIM_WIDTH)
+image = np.zeros((IMAGE_DIM_HEIGHT, IMAGE_DIM_WIDTH))
 
 
 print("Picking up a random 3x3 square patch from sample image")
 rand_row = rd.randint(0, sample_image_row - SEED_SIZE)
 rand_col = rd.randint(0, sample_image_col - SEED_SIZE)
 
-print("Fixing a 3x3  square patch in this almost empty image from the sample image")
-image[mt.floor(IMAGE_DIM_HEIGHT/2) - 1: mt.floor(IMAGE_DIM_HEIGHT/2) + 1, \
-      mt.floor(IMAGE_DIM_WIDTH/2) - 1: mt.floor(IMAGE_DIM_WIDTH/2) + 1] \
+print("Fixing a 3x3  square patch in center of this almost empty image from the sample image")
+image[mt.floor(IMAGE_DIM_HEIGHT/2) - 1: mt.floor(IMAGE_DIM_HEIGHT/2) + 2, \
+      mt.floor(IMAGE_DIM_WIDTH/2) - 1: mt.floor(IMAGE_DIM_WIDTH/2) + 2] \
       = np.ones((SEED_SIZE, SEED_SIZE))
-      
+
+print("Creating the seed from the original image")
+seed = sample_image[rand_row: rand_row + SEED_SIZE, rand_col: rand_col + SEED_SIZE]
+plt.imshow(seed, cmap = "gray")
+#plt.gcf().clear()  
