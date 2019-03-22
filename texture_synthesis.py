@@ -134,7 +134,4 @@ for i in range(len(potential_pixel_row)):
     col_max = pixel_col + mt.floor(WINDOW_SIZE/2) + 1
     
     print("the neighborhood consists of window size of pixels with the specific pixel at the center")
-    neighbors.append(np.sum(filled_list[: \
-                                        pixel_row + mt.floor(WINDOW_SIZE/ + 1), \
-                                        : \
-                                        pixel_col - mt.floor(WINDOW_SIZE/2) + 1]))
+    neighbors.append(np.sum(filled_list[row_min:row_max, col_min:col_max]))
