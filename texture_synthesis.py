@@ -80,6 +80,7 @@ total_pixels = IMAGE_DIM_HEIGHT*IMAGE_DIM_WIDTH
 print("total pixels to be filled")
 print(total_pixels)
 
+# image will contain the final synthesized image
 print("Initializing the empty image consisting of all 0s")
 image = np.zeros((IMAGE_DIM_HEIGHT, IMAGE_DIM_WIDTH))
 
@@ -145,6 +146,17 @@ for i in range(len(potential_pixel_row)):
     descending_filled_num = (-1) * np.array(filled_neighbors, dtype = "int")
     #print(filled_neighbors)
     print(descending_filled_num)
+    #we need the indices where the number of neighbors filled is maximum
     descending_filled_num_indices = np.argsort(descending_filled_num)
     print(descending_filled_num_indices)
+    
+    #we need to iterate over the sorted list (key, value) pair like and pick the list elements
+    for x, i in enumerate(descending_filled_num_indices):
+        # get the row, column  of the slected pixel
+        sel_pix_row = potential_pixel_row[i]
+        sel_pix_col = potential_pixel_col[i]
+        best_matches = find_matches()
 #print(filled_neighbors)
+
+def find_matches(template, sample_image):
+    
