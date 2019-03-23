@@ -57,8 +57,34 @@ IMAGE_DIM_WIDTH = 200
 MAX_PIXEL_VALUE = 255
 SEED_SIZE = 3
 WINDOW_SIZE = 5
+GAUSS_SIGMA = 0.8
 
 
+def find_matches(template, image, frames):
+    print
+
+def gaussian2D(window_size):
+    m,n = [(ss-1.)/2. for ss in window_size]
+    y,x = np.ogrid[-m:m+1,-n:n+1]
+    h = np.exp( -(x*x + y*y) / (2.*GAUSS_SIGMA*GAUSS_SIGMA) )
+    h[ h < np.finfo(h.dtype).eps*h.max() ] = 0
+    sumh = h.sum()
+    if sumh != 0:
+        h /= sumh
+    return h
+
+
+def extract_all_frames(sample_image):
+    pad_size = mt.floor(WINDOW_SIZE/2)
+    possible_frames = []
+    
+    sample_image_row, sample_image_col = sample_image.shape
+    # iterate over the entire sample image array and extratc all possible windows
+    for i in range(pad_size, sample_image_row - pad_size - 1):
+        for j in range(pad_size, sample_image_col - pad_size - 1):
+            possible_frames.append(np.reshape(sample_image[i-pad_size:i + pad_size + 1, j - pad_size: j + pad_size + 1], (2 * pad_size + 1) ** 2))
+    return np.double(possible_frames)
+    
 print("reading image")
 sample_image = imread("T1.gif")
 plt.imshow(sample_image, cmap = "gray")
@@ -125,6 +151,14 @@ print(potential_pixel_col)
 print("building the actual neighbors by picking a pixel from potential pixels" )
 filled_neighbors = []
 
+#size of padding is half of the window size as we need to pad all four sides of the image matrix
+pad_size = mt.floor(WINDOW_SIZE/2)
+# we need to zero pad both the sample image and image to take care of the pixels at the borders
+sample_image_padded = np.lib.pad(sample_image, pad_size, 'constant', constant_values = '0')
+image_padded = np.lib.pad(image, pad_size, 'constant', constant_values = '0') 
+
+possible_frames =  extract_all_frames(sample_image)
+
 for i in range(len(potential_pixel_row)):
     pixel_row = potential_pixel_row[i]
     pixel_col = potential_pixel_col[i]
@@ -152,11 +186,25 @@ for i in range(len(potential_pixel_row)):
     
     #we need to iterate over the sorted list (key, value) pair like and pick the list elements
     for x, i in enumerate(descending_filled_num_indices):
-        # get the row, column  of the slected pixel
+        # get the row, column  of the selected pixel 
+        #use this to calculate the row_min, row_max in padded image
         sel_pix_row = potential_pixel_row[i]
         sel_pix_col = potential_pixel_col[i]
-        best_matches = find_matches()
+        
+        # calculating the min and max of both row and columns of the region to be synthesized
+        # because of the padding the nth index in original matrix is (n+pad_size) index in padded matrix
+        padded_row_min = pad_size + potential_pixel_row[i] - pad_size
+        padded_row_max = pad_size + potential_pixel_row[i] + pad_size + 1
+        padded_col_min = pad_size + potential_pixel_col[i] - pad_size
+        padded_col_max = pad_size + potential_pixel_col[i] + pad_size + 1
+        '''
+        best_matches  = find_matches(filled_list_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max],\
+                                     image_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max], \
+                                     possible_frames) 
+                                     
+        '''
 #print(filled_neighbors)
+#new_image_padded = np.lib.pad(image, mt.floor(WINDOW_SIZE/2), 'constant', constant_values=0)
 
-def find_matches(template, sample_image):
+#def find_matches(template, sample_image):
     
