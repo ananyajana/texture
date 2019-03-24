@@ -61,17 +61,13 @@ ERR_THRESHOLD = 0.3
 MAX_ERR_THRESHOLD = 0.1
 
 
-def find_matches(template, sample_image, valid_mask):
-    gaussian_mask = gaussian2D((WINDOW_SIZE, WINDOW_SIZE))
-    print("gaussian_mask")
-    print(gaussian_mask)
-    print(gaussian_mask.shape)
+def find_matches(template, sample_image, valid_mask, gaussian_mask):
     total_weight = np.sum(np.multiply(gaussian_mask, valid_mask))
     SSD = []
     center_pixel = []
     sample_image_row, sample_image_col = sample_image.shape
     pad_size = mt.floor(WINDOW_SIZE/2)
-    
+    print("hi")
     for i in range(pad_size, sample_image_row - pad_size - 1):
         for j in range(pad_size, sample_image_col - pad_size - 1):
             row_min = i - pad_size
@@ -84,14 +80,14 @@ def find_matches(template, sample_image, valid_mask):
             SSD.append(temp)
             center_pixel.append(sample_image[i, j])
         
-        min_err = min(SSD)
-        best_match = []
+    min_err = min(SSD)
+    best_match = []
         
-        for i in range(len(SSD)):
-            if SSD[i] <= min_err*(1 + ERR_THRESHOLD):
-                best_match.append((SSD[i], center_pixel[i]))
-        
-        return best_match
+    for i in range(len(SSD)):
+        if SSD[i] <= min_err*(1 + ERR_THRESHOLD):
+            best_match.append((SSD[i], center_pixel[i]))
+    print("hello")
+    return best_match
     
     
 def gaussian2D(window_size):
@@ -116,55 +112,57 @@ def extract_all_frames(sample_image):
             possible_frames.append(np.reshape(sample_image[i-pad_size:i + pad_size + 1, j - pad_size: j + pad_size + 1], (2 * pad_size + 1) ** 2))
     return np.double(possible_frames)
     
-print("reading image")
+#print("reading image")
 sample_image = imread("T1.gif")
 #plt.imshow(sample_image, cmap = "gray")
 #plt.gcf().clear()
-print("printing image dimension")
+#print("printing image dimension")
 sample_image_row, sample_image_col = sample_image.shape
 
 
-print("normalizing image by dividing with max pixel value")
+#print("normalizing image by dividing with max pixel value")
 sample_image_normalized = sample_image/MAX_PIXEL_VALUE
-print(sample_image_normalized)
-print("printing modified image dimension")
-print(sample_image_normalized.shape)
+#print(sample_image_normalized)
+#print("printing modified image dimension")
+#print(sample_image_normalized.shape)
 #img1 = io.imread("T2.gif")
 #plt.imshow(sample_image_normalized, cmap = "gray")
 #plt.gcf().clear()
 #print(img1.format)
 total_pixels = IMAGE_DIM_HEIGHT*IMAGE_DIM_WIDTH
-print("total pixels to be filled")
-print(total_pixels)
+#print("total pixels to be filled")
+#print(total_pixels)
 
 # image will contain the final synthesized image
-print("Initializing the empty image consisting of all 0s")
+#print("Initializing the empty image consisting of all 0s")
 image = np.zeros((IMAGE_DIM_HEIGHT, IMAGE_DIM_WIDTH))
 
 
-print("Picking up a random 3x3 square patch from sample image")
+#print("Picking up a random 3x3 square patch from sample image")
 rand_row = rd.randint(0, sample_image_row - SEED_SIZE)
 rand_col = rd.randint(0, sample_image_col - SEED_SIZE)
 
-print("Creating the random seed from the original image")
+#print("Creating the random seed from the original image")
 seed = sample_image_normalized[rand_row: rand_row + SEED_SIZE, rand_col: rand_col + SEED_SIZE]
-plt.imshow(seed, cmap = "gray")
+#plt.imshow(seed, cmap = "gray")
+#plt.imshow(seed)
+
 #plt.gcf().clear()  
 
-print("Pasting the 3x3  square seed in center of this almost empty image from the sample image")
+#print("Pasting the 3x3  square seed in center of this almost empty image from the sample image")
 image[mt.floor(IMAGE_DIM_HEIGHT/2) - 1: mt.floor(IMAGE_DIM_HEIGHT/2) + 2, \
       mt.floor(IMAGE_DIM_WIDTH/2) - 1: mt.floor(IMAGE_DIM_WIDTH/2) + 2] \
       = seed
 
-print("pasting a 3x3 square patch of 1s in the filled_list" )
+#print("pasting a 3x3 square patch of 1s in the filled_list" )
 filled_pixels = SEED_SIZE*SEED_SIZE
-print("filled pixels")
-print(filled_pixels)
+#print("filled pixels")
+#print(filled_pixels)
 
 
 # filled_list keeps track of the pixels already filled. We use it to extract the neighborhood each time
 filled_list = np.zeros((IMAGE_DIM_HEIGHT, IMAGE_DIM_WIDTH))
-print("Fixing the 3x3  square seed in center of this almost empty image")
+#print("Fixing the 3x3  square seed in center of this almost empty image")
 filled_list[mt.floor(IMAGE_DIM_HEIGHT/2) - 1: mt.floor(IMAGE_DIM_HEIGHT/2) + 2, \
       mt.floor(IMAGE_DIM_WIDTH/2) - 1: mt.floor(IMAGE_DIM_WIDTH/2) + 2] \
       = np.ones((SEED_SIZE, SEED_SIZE))
@@ -176,39 +174,41 @@ filled_list_padded = np.lib.pad(filled_list, pad_size, 'constant', constant_valu
 image_padded = np.lib.pad(image, pad_size, 'constant', constant_values = 0) 
     
 max_error_threshold = MAX_ERR_THRESHOLD
+#print("hello")
+possible_frames =  extract_all_frames(sample_image_normalized)
+#print("hi")
+
+gaussian_mask = gaussian2D((WINDOW_SIZE, WINDOW_SIZE))
+#print("gaussian_mask")
+#print(gaussian_mask)
+#print(gaussian_mask.shape)
 
 while filled_pixels < total_pixels:
+    print("filled pixels")
+    print(filled_pixels)
     progress = 0
     filled_list_neighbors =  morphology.binary_dilation(filled_list)
     potential_pixel_row, potential_pixel_col = np.nonzero(filled_list_neighbors - filled_list)
     
-    print("potential_pixel_row")
-    print(potential_pixel_row)
-    print("potential_pixel_col")
-    print(potential_pixel_col)
+    #print("potential_pixel_row")
+    #print(potential_pixel_row)
+    #print("potential_pixel_col")
+    #print(potential_pixel_col)
     
-    print("building the actual neighbors by picking a pixel from potential pixels" )
+    #print("building the actual neighbors by picking a pixel from potential pixels" )
     filled_neighbors = []
-    
-
-    
-    print("hello")
-    possible_frames =  extract_all_frames(sample_image_normalized)
-    print("hi")
-    
-    
     
     for i in range(len(potential_pixel_row)):
         pixel_row = potential_pixel_row[i]
         pixel_col = potential_pixel_col[i]
-        print(i)
-        print("the neighborhood consists of window size of pixels with the specific pixel at the center")
+        #print(i)
+        #print("the neighborhood consists of window size of pixels with the specific pixel at the center")
         row_min = pixel_row - mt.floor(WINDOW_SIZE/2)
         row_max = pixel_row + mt.floor(WINDOW_SIZE/2) + 1
         col_min = pixel_col - mt.floor(WINDOW_SIZE/2)
         col_max = pixel_col + mt.floor(WINDOW_SIZE/2) + 1
         
-        print("For each potential pixel we check how many pixels are already filled in its window")
+        #print("For each potential pixel we check how many pixels are already filled in its window")
         #print("this is done by counting the number of 1s in its window")
         filled_neighbors.append(np.sum(filled_list[row_min:row_max, col_min:col_max]))
         
@@ -218,41 +218,49 @@ while filled_pixels < total_pixels:
         
         descending_filled_num = (-1) * np.array(filled_neighbors, dtype = "int")
         #print(filled_neighbors)
-        print(descending_filled_num)
+        #print(descending_filled_num)
+        #print("Number of neighbors")
+        #print(len(descending_filled_num))
         #we need the indices where the number of neighbors filled is maximum
         descending_filled_num_indices = np.argsort(descending_filled_num)
-        print(descending_filled_num_indices)
+        #print(descending_filled_num_indices)
         
-        #we need to iterate over the sorted list (key, value) pair like and pick the list elements
-        for x, i in enumerate(descending_filled_num_indices):
-            # get the row, column  of the selected pixel 
-            #use this to calculate the row_min, row_max in padded image
-            sel_pix_row = potential_pixel_row[i]
-            sel_pix_col = potential_pixel_col[i]
-            
-            # calculating the min and max of both row and columns of the region to be synthesized
-            # because of the padding the nth index in original matrix is (n+pad_size) index in padded matrix
-            padded_row_min = pad_size + potential_pixel_row[i] - pad_size
-            padded_row_max = pad_size + potential_pixel_row[i] + pad_size + 1
-            padded_col_min = pad_size + potential_pixel_col[i] - pad_size
-            padded_col_max = pad_size + potential_pixel_col[i] + pad_size + 1
-            
-            best_matches  = find_matches(image_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max], \
-                                         possible_frames,filled_list_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max]) 
+    #we need to iterate over the sorted list (key, value) pair like and pick the list elements
+    print("outside")
+    for x, i in enumerate(descending_filled_num_indices):
+        # get the row, column  of the selected pixel 
+        #use this to calculate the row_min, row_max in padded image
+        sel_pix_row = potential_pixel_row[i]
+        sel_pix_col = potential_pixel_col[i]
         
-    
-            random_match = rd.randint(0, len(best_matches) - 1)
-            if best_matches[random_match][0] <= MAX_ERR_THRESHOLD:
-                image_padded[pad_size + sel_pix_row:pad_size +  sel_pix_col] = best_matches[random_match][1]
-                image[sel_pix_row:sel_pix_col] = best_matches[random_match][1]
-                filled_list_padded[pad_size + sel_pix_row][pad_size +  sel_pix_col] = 1
-                filled_list[sel_pix_row][sel_pix_col]=1
-                
-                filled_pixels = filled_pixels + 1
-                progress = 1
-            if progress == 0:
-                max_error_threshold = max_error_threshold * 1.1
+        # calculating the min and max of both row and columns of the region to be synthesized
+        # because of the padding the nth index in original matrix is (n+pad_size) index in padded matrix
+        padded_row_min = pad_size + potential_pixel_row[i] - pad_size
+        padded_row_max = pad_size + potential_pixel_row[i] + pad_size + 1
+        padded_col_min = pad_size + potential_pixel_col[i] - pad_size
+        padded_col_max = pad_size + potential_pixel_col[i] + pad_size + 1
+        
+        best_matches  = find_matches(image_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max], \
+                                     possible_frames,filled_list_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max],\
+                                     gaussian_mask) 
+        print(len(descending_filled_num_indices))
+        print("here")
+        print(x)
+        random_match = rd.randint(0, len(best_matches) - 1)
+        if best_matches[random_match][0] <= MAX_ERR_THRESHOLD:
+            image_padded[pad_size + sel_pix_row:pad_size +  sel_pix_col] = best_matches[random_match][1]
+            image[sel_pix_row:sel_pix_col] = best_matches[random_match][1]
+            filled_list_padded[pad_size + sel_pix_row][pad_size +  sel_pix_col] = 1
+            filled_list[sel_pix_row][sel_pix_col]=1
+            
+            filled_pixels = filled_pixels + 1
+            progress = 1
+            print("inside")
+    if progress == 0:
+        max_error_threshold = max_error_threshold * 1.1
                 
 io.imsave("t1_new.gif", image)
 #image = image * 255
-plt.imshow(image, cmap = "gray")
+#plt.imshow(image, cmap = "gray")
+#plt.imshow("t1_new.gif", cmap = "gray")
+plt.imshow(image)
