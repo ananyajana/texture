@@ -50,7 +50,6 @@ import random as rd
 import math as mt
 from matplotlib.image import imread
 import matplotlib.pyplot as plt
-import time
 
 IMAGE_DIM_HEIGHT = 200
 IMAGE_DIM_WIDTH = 200
@@ -60,8 +59,25 @@ WINDOW_SIZE = 5
 GAUSS_SIGMA = 0.8
 
 
-def find_matches(template, image, frames):
-    print
+def find_matches(template, sample_image, valid_mask):
+    gaussian_mask = gaussian2D((WINDOW_SIZE, WINDOW_SIZE))
+    print("gaussian_mask")
+    print(gaussian_mask)
+    print(gaussian_mask.shape)
+    total_weight = np.sum(np.multiply(gaussian_mask, valid_mask))
+    SSD = []
+    pixel_val = []
+    sample_image_row, sample_image_col = sample_image.shape
+    pad_size = mt.floor(WINDOW_SIZE/2)
+    
+    for in range(pad_size, sample_image_row - pad_size - 1):
+        for j in range(pad_size, sample_image_col - pad_size - 1):
+            row_min = i - pad_size
+            row_max = i + pad_size + 1
+            col_min = j - pad_size
+            col_max = j + pad_size + 1
+            distance = (template - sample_image[row_min:row_min, col_min:col_min])**2
+            SSD.append()
 
 def gaussian2D(window_size):
     m,n = [(ss-1.)/2. for ss in window_size]
@@ -154,10 +170,12 @@ filled_neighbors = []
 #size of padding is half of the window size as we need to pad all four sides of the image matrix
 pad_size = mt.floor(WINDOW_SIZE/2)
 # we need to zero pad both the sample image and image to take care of the pixels at the borders
-sample_image_padded = np.lib.pad(sample_image, pad_size, 'constant', constant_values = '0')
-image_padded = np.lib.pad(image, pad_size, 'constant', constant_values = '0') 
+filled_list_padded = np.lib.pad(filled_list, pad_size, 'constant', constant_values = 0)
+image_padded = np.lib.pad(image, pad_size, 'constant', constant_values = 0) 
 
-possible_frames =  extract_all_frames(sample_image)
+print("hello")
+possible_frames =  extract_all_frames(sample_image_normalized)
+print("hi")
 
 for i in range(len(potential_pixel_row)):
     pixel_row = potential_pixel_row[i]
@@ -197,14 +215,12 @@ for i in range(len(potential_pixel_row)):
         padded_row_max = pad_size + potential_pixel_row[i] + pad_size + 1
         padded_col_min = pad_size + potential_pixel_col[i] - pad_size
         padded_col_max = pad_size + potential_pixel_col[i] + pad_size + 1
-        '''
-        best_matches  = find_matches(filled_list_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max],\
-                                     image_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max], \
-                                     possible_frames) 
+        
+        best_matches  = find_matches(image_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max], \
+                                     possible_frames,filled_list_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max]) 
                                      
-        '''
+        
 #print(filled_neighbors)
 #new_image_padded = np.lib.pad(image, mt.floor(WINDOW_SIZE/2), 'constant', constant_values=0)
 
 #def find_matches(template, sample_image):
-    
