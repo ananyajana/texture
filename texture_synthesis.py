@@ -66,18 +66,21 @@ def find_matches(template, sample_image, valid_mask):
     print(gaussian_mask.shape)
     total_weight = np.sum(np.multiply(gaussian_mask, valid_mask))
     SSD = []
-    pixel_val = []
+    center_pixel = []
     sample_image_row, sample_image_col = sample_image.shape
     pad_size = mt.floor(WINDOW_SIZE/2)
     
-    for in range(pad_size, sample_image_row - pad_size - 1):
+    for i in range(pad_size, sample_image_row - pad_size - 1):
         for j in range(pad_size, sample_image_col - pad_size - 1):
             row_min = i - pad_size
             row_max = i + pad_size + 1
             col_min = j - pad_size
             col_max = j + pad_size + 1
-            distance = (template - sample_image[row_min:row_min, col_min:col_min])**2
-            SSD.append()
+            distance = (template - sample_image[row_min:row_min, col_min:col_max])**2
+            temp = np.sum(distance*gaussian_mask*valid_mask)
+            temp = temp/total_weight
+            SSD.append(temp)
+            center_pixel.append(sample_image[i, j])
 
 def gaussian2D(window_size):
     m,n = [(ss-1.)/2. for ss in window_size]
