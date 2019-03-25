@@ -51,23 +51,30 @@ import math as mt
 from matplotlib.image import imread
 import matplotlib.pyplot as plt
 
-IMAGE_DIM_HEIGHT = 200
-IMAGE_DIM_WIDTH = 200
+IMAGE_DIM_HEIGHT = 20
+IMAGE_DIM_WIDTH = 20
 MAX_PIXEL_VALUE = 255
 SEED_SIZE = 3
 WINDOW_SIZE = 5
 GAUSS_SIGMA = 0.8
 ERR_THRESHOLD = 0.3
 MAX_ERR_THRESHOLD = 0.1
+TOTAL_PIXELS_IN_WINDOW = (WINDOW_SIZE)*(WINDOW_SIZE)
+
+#print(TOTAL_PIXELS_IN_WINDOW)
 
 
 def find_matches(template, sample_image, valid_mask, gaussian_mask):
+    #print("gaussian_mask")
+    #print(gaussian_mask)
+    #print("valid mask")
+    #print(valid_mask)
     total_weight = np.sum(np.multiply(gaussian_mask, valid_mask))
     SSD = []
     center_pixel = []
     sample_image_row, sample_image_col = sample_image.shape
     pad_size = mt.floor(WINDOW_SIZE/2)
-    print("hi")
+    #print("hi")
     for i in range(pad_size, sample_image_row - pad_size - 1):
         for j in range(pad_size, sample_image_col - pad_size - 1):
             row_min = i - pad_size
@@ -75,21 +82,58 @@ def find_matches(template, sample_image, valid_mask, gaussian_mask):
             col_min = j - pad_size
             col_max = j + pad_size + 1
             distance = (template - sample_image[row_min:row_max, col_min:col_max])**2
+            #print("distance*gaussian_mask*valid_mask")
+            #print(distance*gaussian_mask*valid_mask)
             temp = np.sum(distance*gaussian_mask*valid_mask)
             temp = temp/total_weight
             SSD.append(temp)
             center_pixel.append(sample_image[i, j])
-        
+    
+    #print("SSD")
+    #print(SSD)
     min_err = min(SSD)
+    #print("min_err")
+    #print(min_err)
     best_match = []
         
     for i in range(len(SSD)):
         if SSD[i] <= min_err*(1 + ERR_THRESHOLD):
             best_match.append((SSD[i], center_pixel[i]))
-    print("hello")
+    #print("hello")
+    #print("best_match len")
+    #print(len(best_match))
     return best_match
-    
-    
+''' 
+def find_matches(template, src_image, valid_mask, gauss_mask):
+    total_weight = np.sum(np.multiply(gauss_mask, valid_mask))
+    pad_size = mt.floor(WINDOW_SIZE/2)
+    if total_weight == 0:
+        print("Trouble")
+
+    ssd = []
+    pixel_val = []
+    src_row, src_col = np.shape(src_image)
+    for i in range(pad_size, src_row-pad_size-1):
+        for j in range(pad_size, src_col-pad_size-1):
+            distance = (template - src_image[i-pad_size:i + pad_size + 1, j - pad_size:j + pad_size + 1]) ** 2
+            ssd.append(np.sum(distance * gauss_mask * valid_mask) / total_weight)
+            pixel_val.append(src_image[i, j])
+
+    min_error = min(ssd)
+    # print "Min Err loop= "+str(min_error)
+    rPack=[]
+
+    for i in range(len(ssd)):
+        if ssd[i]<=min_error*(1+ERR_THRESHOLD):
+            rPack.append((ssd[i], pixel_val[i]))
+
+    # print len(rPack)
+    if len(rPack)==0:
+        print(template)
+    return rPack 
+''' 
+
+  
 def gaussian2D(window_size):
     m,n = [(ss-1.)/2. for ss in window_size]
     y,x = np.ogrid[-m:m+1,-n:n+1]
@@ -122,6 +166,7 @@ sample_image_row, sample_image_col = sample_image.shape
 
 #print("normalizing image by dividing with max pixel value")
 sample_image_normalized = sample_image/MAX_PIXEL_VALUE
+#sample_image_normalized = sample_image/1
 #print(sample_image_normalized)
 #print("printing modified image dimension")
 #print(sample_image_normalized.shape)
@@ -182,11 +227,16 @@ gaussian_mask = gaussian2D((WINDOW_SIZE, WINDOW_SIZE))
 #print("gaussian_mask")
 #print(gaussian_mask)
 #print(gaussian_mask.shape)
+#plt.imshow(image, cmap = "gray")
 
 while filled_pixels < total_pixels:
-    print("filled pixels")
-    print(filled_pixels)
+#while filled_pixels < 10:
+    #print("filled pixels")
+    #print(filled_pixels)
+    #plt.imshow(seed)
     progress = 0
+    potential_pixel_row = []
+    potential_pixel_col = []
     filled_list_neighbors =  morphology.binary_dilation(filled_list)
     potential_pixel_row, potential_pixel_col = np.nonzero(filled_list_neighbors - filled_list)
     
@@ -216,18 +266,22 @@ while filled_pixels < total_pixels:
         # for which number of filled neighbors in the windows i maximum
         # this pixel is picked up to be grown because we want to minimize the loss in guessing neighborhood
         
-        descending_filled_num = (-1) * np.array(filled_neighbors, dtype = "int")
-        #print(filled_neighbors)
-        #print(descending_filled_num)
-        #print("Number of neighbors")
-        #print(len(descending_filled_num))
-        #we need the indices where the number of neighbors filled is maximum
-        descending_filled_num_indices = np.argsort(descending_filled_num)
-        #print(descending_filled_num_indices)
+    descending_filled_num = (-1) * np.array(filled_neighbors, dtype = "int")
+    #print(filled_neighbors)
+    #print(descending_filled_num)
+    #print("Number of neighbors")
+    #print(len(descending_filled_num))
+    #we need the indices where the number of neighbors filled is maximum
+    descending_filled_num_indices = np.argsort(descending_filled_num)
+    print(descending_filled_num_indices)
         
     #we need to iterate over the sorted list (key, value) pair like and pick the list elements
-    print("outside")
+    #print("outside")
     for x, i in enumerate(descending_filled_num_indices):
+        print("x")
+        print(x)
+        print("i")
+        print(i)
         # get the row, column  of the selected pixel 
         #use this to calculate the row_min, row_max in padded image
         sel_pix_row = potential_pixel_row[i]
@@ -243,24 +297,31 @@ while filled_pixels < total_pixels:
         best_matches  = find_matches(image_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max], \
                                      possible_frames,filled_list_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max],\
                                      gaussian_mask) 
-        print(len(descending_filled_num_indices))
-        print("here")
-        print(x)
+        #print(len(descending_filled_num_indices))
+        #print("here")
+        #print(x)
+        
+        #print("len(best_matches)")
+        #print(len(best_matches))
+        
         random_match = rd.randint(0, len(best_matches) - 1)
+        #print("random_match")
+        #print(random_match)
         if best_matches[random_match][0] <= MAX_ERR_THRESHOLD:
-            image_padded[pad_size + sel_pix_row:pad_size +  sel_pix_col] = best_matches[random_match][1]
-            image[sel_pix_row:sel_pix_col] = best_matches[random_match][1]
+            image_padded[pad_size + sel_pix_row][pad_size +  sel_pix_col] = best_matches[random_match][1]
+            image[sel_pix_row][sel_pix_col] = best_matches[random_match][1]
             filled_list_padded[pad_size + sel_pix_row][pad_size +  sel_pix_col] = 1
             filled_list[sel_pix_row][sel_pix_col]=1
             
             filled_pixels = filled_pixels + 1
             progress = 1
-            print("inside")
+            #print("inside")
+            #plt.imshow(image)
     if progress == 0:
         max_error_threshold = max_error_threshold * 1.1
                 
 io.imsave("t1_new.gif", image)
-#image = image * 255
+#image = image * MAX_PIXEL_VALUE
 #plt.imshow(image, cmap = "gray")
 #plt.imshow("t1_new.gif", cmap = "gray")
 plt.imshow(image)
