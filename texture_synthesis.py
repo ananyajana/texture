@@ -51,14 +51,14 @@ import math as mt
 from matplotlib.image import imread
 import matplotlib.pyplot as plt
 
-IMAGE_DIM_HEIGHT = 20
-IMAGE_DIM_WIDTH = 20
+IMAGE_DIM_HEIGHT = 200
+IMAGE_DIM_WIDTH = 200
 MAX_PIXEL_VALUE = 255
 SEED_SIZE = 3
 WINDOW_SIZE = 5
 GAUSS_SIGMA = 0.8
-ERR_THRESHOLD = 0.3
-MAX_ERR_THRESHOLD = 0.1
+ERR_THRESHOLD = 0.4
+MAX_ERR_THRESHOLD = 0.12
 TOTAL_PIXELS_IN_WINDOW = (WINDOW_SIZE)*(WINDOW_SIZE)
 
 #print(TOTAL_PIXELS_IN_WINDOW)
@@ -320,7 +320,7 @@ while filled_pixels < total_pixels:
     if progress == 0:
         max_error_threshold = max_error_threshold * 1.1
                 
-io.imsave("t1_new.gif", image)
+io.imsave("t1_win_5.gif", image)
 #image = image * MAX_PIXEL_VALUE
 #plt.imshow(image, cmap = "gray")
 #plt.imshow("t1_new.gif", cmap = "gray")
