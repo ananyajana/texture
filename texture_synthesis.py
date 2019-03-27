@@ -57,8 +57,8 @@ MAX_PIXEL_VALUE = 255
 SEED_SIZE = 3
 WINDOW_SIZE = 5
 GAUSS_SIGMA = 0.8
-ERR_THRESHOLD = 0.4
-MAX_ERR_THRESHOLD = 0.12
+ERR_THRESHOLD = 0.3
+MAX_ERR_THRESHOLD = 0.1
 TOTAL_PIXELS_IN_WINDOW = (WINDOW_SIZE)*(WINDOW_SIZE)
 
 #print(TOTAL_PIXELS_IN_WINDOW)
@@ -103,7 +103,7 @@ def find_matches(template, sample_image, valid_mask, gaussian_mask):
     #print("best_match len")
     #print(len(best_match))
     return best_match
-''' 
+'''
 def find_matches(template, src_image, valid_mask, gauss_mask):
     total_weight = np.sum(np.multiply(gauss_mask, valid_mask))
     pad_size = mt.floor(WINDOW_SIZE/2)
@@ -132,8 +132,26 @@ def find_matches(template, src_image, valid_mask, gauss_mask):
         print(template)
     return rPack 
 ''' 
+def find_matches_modified(template,image_window, valid_mask, gauss_mask, centre_pixels):
+    pad_size = mt.floor(WINDOW_SIZE/2)
+    template = np.reshape(template, TOTAL_PIXELS_IN_WINDOW)
+    gauss_mask = np.reshape(gauss_mask, TOTAL_PIXELS_IN_WINDOW)
+    valid_mask = np.reshape(valid_mask, TOTAL_PIXELS_IN_WINDOW)
+    total_weight = np.sum(np.multiply(gauss_mask, valid_mask))
+    distance = (image_window-template)**2
+    ssd = np.sum((distance*gauss_mask*valid_mask) / total_weight, axis=1)
+    min_error = min(ssd)
+    # print "Min err mat= "+str(min_error)
+    mid = ((2 * pad_size + 1)*(2 * pad_size + 1)) / 2;
+    best_matches = []
+    for i in range(len(ssd)):
+        if ssd[i]<=min_error*(1+ERR_THRESHOLD):
+            best_matches.append((ssd[i], centre_pixels[i]))
 
-  
+    #return [[err, image_window[i*WINDOW_SIZE +  (mid - 1)]] for i, err in enumerate(ssd) if err <= min_error*(1+ERR_THRESHOLD)]
+    return best_matches
+
+
 def gaussian2D(window_size):
     m,n = [(ss-1.)/2. for ss in window_size]
     y,x = np.ogrid[-m:m+1,-n:n+1]
@@ -143,7 +161,6 @@ def gaussian2D(window_size):
     if sumh != 0:
         h /= sumh
     return h
-
 
 def extract_all_frames(sample_image):
     pad_size = mt.floor(WINDOW_SIZE/2)
@@ -155,6 +172,19 @@ def extract_all_frames(sample_image):
         for j in range(pad_size, sample_image_col - pad_size - 1):
             possible_frames.append(np.reshape(sample_image[i-pad_size:i + pad_size + 1, j - pad_size: j + pad_size + 1], (2 * pad_size + 1) ** 2))
     return np.double(possible_frames)
+
+def extract_all_frames_centers(sample_image):
+    pad_size = mt.floor(WINDOW_SIZE/2)
+    possible_frames = []
+    centers = []
+    
+    sample_image_row, sample_image_col = sample_image.shape
+    # iterate over the entire sample image array and extratc all possible windows
+    for i in range(pad_size, sample_image_row - pad_size - 1):
+        for j in range(pad_size, sample_image_col - pad_size - 1):
+            possible_frames.append(np.reshape(sample_image[i-pad_size:i + pad_size + 1, j - pad_size: j + pad_size + 1], (2 * pad_size + 1) ** 2))
+            centers.append(sample_image[i, j])
+    return np.double(possible_frames), np.double(centers)
     
 #print("reading image")
 sample_image = imread("T1.gif")
@@ -220,7 +250,8 @@ image_padded = np.lib.pad(image, pad_size, 'constant', constant_values = 0)
     
 max_error_threshold = MAX_ERR_THRESHOLD
 #print("hello")
-possible_frames =  extract_all_frames(sample_image_normalized)
+possible_frames, possible_frames_centers =  extract_all_frames_centers(sample_image_normalized)
+#possible_frames =  extract_all_frames(sample_image_normalized)
 #print("hi")
 
 gaussian_mask = gaussian2D((WINDOW_SIZE, WINDOW_SIZE))
@@ -294,9 +325,14 @@ while filled_pixels < total_pixels:
         padded_col_min = pad_size + potential_pixel_col[i] - pad_size
         padded_col_max = pad_size + potential_pixel_col[i] + pad_size + 1
         
+        best_matches  = find_matches_modified(image_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max], \
+                                     possible_frames,filled_list_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max],\
+                                     gaussian_mask, possible_frames_centers) 
+        '''
         best_matches  = find_matches(image_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max], \
                                      possible_frames,filled_list_padded[padded_row_min: padded_row_max, padded_col_min: padded_col_max],\
-                                     gaussian_mask) 
+                                     gaussian_mask)
+        '''
         #print(len(descending_filled_num_indices))
         #print("here")
         #print(x)
@@ -320,7 +356,7 @@ while filled_pixels < total_pixels:
     if progress == 0:
         max_error_threshold = max_error_threshold * 1.1
                 
-io.imsave("t1_win_5.gif", image)
+io.imsave("t1_win5_sigma0.8.jpeg", image)
 #image = image * MAX_PIXEL_VALUE
 #plt.imshow(image, cmap = "gray")
 #plt.imshow("t1_new.gif", cmap = "gray")
