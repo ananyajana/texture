@@ -55,8 +55,8 @@ IMAGE_DIM_HEIGHT = 200
 IMAGE_DIM_WIDTH = 200
 MAX_PIXEL_VALUE = 255
 SEED_SIZE = 3
-WINDOW_SIZE = 5
-GAUSS_SIGMA = 0.8
+WINDOW_SIZE = 21
+GAUSS_SIGMA = 1.4
 ERR_THRESHOLD = 0.3
 MAX_ERR_THRESHOLD = 0.1
 TOTAL_PIXELS_IN_WINDOW = (WINDOW_SIZE)*(WINDOW_SIZE)
@@ -187,7 +187,9 @@ def extract_all_frames_centers(sample_image):
     return np.double(possible_frames), np.double(centers)
     
 #print("reading image")
-sample_image = imread("T1.gif")
+sample_image = imread("T5.gif")
+#plt.imshow(sample_image)
+
 #plt.imshow(sample_image, cmap = "gray")
 #plt.gcf().clear()
 #print("printing image dimension")
@@ -356,7 +358,7 @@ while filled_pixels < total_pixels:
     if progress == 0:
         max_error_threshold = max_error_threshold * 1.1
                 
-io.imsave("t1_win5_sigma0.8.jpeg", image)
+io.imsave("t5_win13_sigma0.8.jpeg", image)
 #image = image * MAX_PIXEL_VALUE
 #plt.imshow(image, cmap = "gray")
 #plt.imshow("t1_new.gif", cmap = "gray")
