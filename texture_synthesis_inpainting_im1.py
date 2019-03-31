@@ -242,7 +242,7 @@ print(total_pixels)
 #image[mt.floor(IMAGE_DIM_HEIGHT/2) - 1: mt.floor(IMAGE_DIM_HEIGHT/2) + 2, \
 #      mt.floor(IMAGE_DIM_WIDTH/2) - 1: mt.floor(IMAGE_DIM_WIDTH/2) + 2] \
 #      = seed
-image = sample_image_normalized
+image = sample_image_normalized1
 
 #print("pasting a 3x3 square patch of 1s in the filled_list" )
 #filled_pixels = SEED_SIZE*SEED_SIZE
